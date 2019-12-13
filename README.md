@@ -290,4 +290,106 @@ JobId=50515841 JobName=mapping_usearch_7h
 cancel a job
  scancel 50513783
 
-Use mothur 
+Use mothur (need to creat a job befor use mothur)
+module spider mothur (find mothur version)
+
+module spider Mothur/1.41.3-Python-2.7.13
+
+ml icc/2017.1.132-GCC-6.3.0-2.27  impi/2017.1.132 (dependancies)
+
+ml Mothur/1.41.3-Python-2.7.13
+
+mothur
+
+classify.seqs(fasta=full_rep_set.fasta, template=../silva.nr_v128.align, taxonomy=../silva.nr_v128.tax, method=wang)
+
+
+creat a job for classify
+nano classify.sb
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=4:00:00             	# limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  	# number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=1           	# number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=400G                    	# memory required per node - amount of memory (in bytes)
+#SBATCH --job-name 16S_bean_development	# you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-user=hujian2@msu.edu        # replace with your email address
+#SBATCH --mail-type=BEGIN,END		# will send you email when the job started and ended 
+########## Command Lines to Run ##########
+
+cd /mnt/research/ShadeLab/Hu/results    # change to the directory where your code is located
+
+ml icc/2017.1.132-GCC-6.3.0-2.27  impi/2017.1.132
+ml Mothur/1.41.3-Python-2.7.13
+
+mothur mothur_classify
+
+nano mothur_classify (need to do in a different script (not the same as classify.sb) for mothur classify)
+classify.seqs(fasta=full_rep_set.fasta, template=../silva.nr_v128.align, taxonomy=../silva.nr_v128.tax, method=wang)
+
+sbatch classify.sb
+(Submitted batch job 51704286)
+
+qstat -u hujian2
+dev-intel14.i:
+                                                                               Req'd  Req'd   Elap
+Job id               Username Queue    Name                 SessID NDS   TSK   Memory Time Use S Time
+-------------------- -------- -------- -------------------- ------ ----- ----- ------ ----- - -----
+51704286             hujian2  general- 16S_bean_development --         1     1     -- 04:00 R 00:02
+
+wget https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+
+gunzip *
+
+creat a job for alignment (run another job at the same time if the job are independant)
+
+nano alignment.sb
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=12:00:00             	# limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  	# number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=1           	# number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=400G                    	# memory required per node - amount of memory (in bytes)
+#SBATCH --job-name alignment	# you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-user=hujian2@msu.edu        # replace with your email address
+#SBATCH --mail-type=BEGIN,END		# will send you email when the job started and ended 
+########## Command Lines to Run ##########
+
+cd /mnt/research/ShadeLab/Hu/results    # change to the directory where your code is located
+
+/mnt/home/hujian2/muscle3.8.31_i86linux64 -in full_rep_set.fasta -out alignment_otus.fasta -maxiters 2 -diags1
+
+sbatch alignment.sb
+
+creat a job for phylogenetics
+
+nano phylogenetictree.sb
+#!/bin/bash --login
+########## Define Resources Needed with SBATCH Lines ##########
+ 
+#SBATCH --time=12:00:00             	# limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --ntasks=1                  	# number of tasks - how many tasks (nodes) that you require (same as -n)
+#SBATCH --cpus-per-task=1           	# number of CPUs (or cores) per task (same as -c)
+#SBATCH --mem=400G                    	# memory required per node - amount of memory (in bytes)
+#SBATCH --job-name phylogenetictree	# you can give your job a name for easier identification (same as -J)
+#SBATCH --mail-user=hujian2@msu.edu        # replace with your email address
+#SBATCH --mail-type=BEGIN,END		# will send you email when the job started and ended 
+########## Command Lines to Run ##########
+
+cd /mnt/research/ShadeLab/Hu/results    # change to the directory where your code is located
+
+ml icc/2018.1.163-GCC-6.4.0-2.28  impi/2018.1.163
+ml FastTree/2.1.10
+
+FastTree -gtr -nt /mnt/home/hujian2/alignment_otus.fasta > otuTree_fasttree.tre
+
+sbatch phylogenetictree.sb
+
+qstat -u hujian2
+
+
+ 
+
+
